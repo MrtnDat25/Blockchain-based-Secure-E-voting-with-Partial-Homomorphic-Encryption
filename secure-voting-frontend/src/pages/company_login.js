@@ -84,6 +84,7 @@ signin = async (e) => {
 
     localStorage.setItem("accessToken", accessToken);
     localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("electionId", user.electionId);
 
     Cookies.set("accessToken", accessToken, {
       expires: 7,

@@ -9,47 +9,49 @@ import * as XLSX from "xlsx"
 
 import Head from "next/head";
 
-import { Buffer } from "buffer";
-import { uploadToPinata } from "../../../../pinata";
+import { uploadToPinata } from "../../../services/pinata";
 import api from "../../../services/api"
 
 
 class VotingList extends Component { 
 
-  state = {
-    candidates: [],
-    item: [],
+    state = {
+      candidates: [],
+      item: [],
 
-    cand_name: "",
-    cand_email: "",
+      cand_name: "",
+      cand_desc: "",
 
-    buffer: null,
+      file: null,
 
-    loading: false,
-  };
+      loading: false,
+    };
 
 async componentDidMount() {
   try {
 
-    const res =
-      await api.get("/candidates");
+    const electionId = localStorage.getItem("electionId");
+    if (!electionId) {
+    console.log("Missing electionId");
+    return;
+  }
 
-    const candidates =
-      res.data.data || [];
+    const res = await api.get(
+      `/candidates?electionId=${electionId}`
+    );
 
-    const item =
-      candidates.map((candidate) => ({
-        header:
-          candidate.fullName,
+    const candidates = res.data.data || [];
 
-        description:
-          candidate.email,
+    const item = candidates.map((candidate) => ({
+      header: candidate.fullName,
+      description: candidate.email,
 
-        image:
-          candidate.imageCid
-            ? `https://gateway.pinata.cloud/ipfs/${candidate.imageCid}`
-            : null,
-      }));
+      image: candidate.imageCid
+        ? `https://gateway.pinata.cloud/ipfs/${candidate.imageCid}`
+        : "/avatar.png",
+
+      extra: candidate.bio || "",
+    }));
 
     this.setState({
       candidates,
@@ -60,6 +62,16 @@ async componentDidMount() {
     console.log(err);
   }
 }
+
+captureFile = (event) => {
+  const file = event.target.files[0];
+
+  this.setState({
+    file,
+  });
+};
+
+
     getElectionDetails = () => {
         const {
             election_name,
@@ -80,78 +92,34 @@ async componentDidMount() {
       }
 
     renderTable = () => {
-        return (<Card.Group items={this.state.item}/>)
-    } 
+        return (<Card.Group>
+        {this.state.candidates.map((candidate) => (
+          <Card key={candidate._id}>
+            <Image
+              src={
+                candidate.imageCid
+                  ? `https://gateway.pinata.cloud/ipfs/${candidate.imageCid}`
+                  : "/avatar.png"
+              }
+            />
 
-    captureFile = (event) => {
-      event.stopPropagation();
-      event.preventDefault();
+            <Card.Content>
+              <Card.Header>
+                {candidate.fullName}
+              </Card.Header>
 
-      const file = event.target.files[0];
+              <Card.Meta>
+                {candidate.email}
+              </Card.Meta>
 
-      if (!file) {
-        alert("No file selected");
-        return;
-      }
-
-      let reader = new FileReader();
-
-      reader.readAsArrayBuffer(file);
-
-      reader.onloadend = () => {
-        const buffer = Buffer.from(reader.result);
-
-        this.setState({
-          file: file,
-          buffer: buffer
-        });
-      };
-    };
-
-loadCandidates = async () => {
-  try {
-    const add = Cookies.get("address");
-
-    const election = Election(add);
-
-    const c = await election.methods.getNumOfCandidates().call();
-
-    let candidates = [];
-
-    for (let i = 0; i < c; i++) {
-      candidates.push(
-        await election.methods.getCandidate(i).call()
-      );
-    }
-
-    const items = candidates.map((candidate) => {
-      return {
-        header: candidate[0],
-        description: candidate[1],
-        image: (
-          <Image
-            src={`https://gateway.pinata.cloud/ipfs/${candidate[2]}`}
-          />
-        ),
-        extra: (
-          <div>
-            <Icon name="pie graph" />
-            {candidate[3].toString()}
-          </div>
-        ),
-      };
-    });
-
-    this.setState({
-      candidates,
-      item: items,
-    });
-
-  } catch (err) {
-    console.log(err);
-  }
-};
-
+              <Card.Description>
+                {candidate.bio}
+              </Card.Description>
+            </Card.Content>
+          </Card>
+        ))}
+      </Card.Group>)
+          } 
 
 
     
@@ -165,71 +133,52 @@ onSubmit = async (event) => {
       loading: true,
     });
 
-    const {
-      cand_name,
-      buffer,
-    } = this.state;
+    const name = this.state.cand_name;
 
     const email =
-      document.getElementById("email")
-      .value;
+      document.getElementById("email").value;
 
-    if (
-      !cand_name ||
-      !email
-    ) {
+    const bio =
+      this.state.cand_desc;
+
+    if (!name || !email) {
       alert("Missing fields");
       return;
     }
 
     let imageCid = "";
 
-    if (buffer) {
-
-      const formData =
-        new FormData();
-
-      formData.append(
-        "file",
-        buffer
+    if (this.state.file) {
+      imageCid = await uploadToPinata(
+        this.state.file
       );
-
-      const uploadRes =
-        await api.post(
-          "/upload/pinata",
-          formData,
-          {
-            headers: {
-              "Content-Type":
-                "multipart/form-data",
-            },
-          }
-        );
-
-      imageCid =
-        uploadRes.data.cid;
     }
+
+    const electionId =
+      localStorage.getItem("electionId");
+    const res = await api.get(
+      `/candidates?electionId=${electionId}`
+    );
 
     await api.post(
       "/candidates",
       {
-        fullName:
-          cand_name,
-
+        electionId,
+        name,
         email,
-
+        bio,
         imageCid,
       }
     );
 
-    alert(
-      "Candidate added"
-    );
+    alert("Candidate added");
 
     await this.componentDidMount();
 
     this.setState({
       cand_name: "",
+      cand_desc: "",
+      file: null,
       loading: false,
     });
 
@@ -301,12 +250,10 @@ onSubmit = async (event) => {
                 query: { address: Cookies.get("address") },
               }}
             >
-      
-                <Menu.Item as="a" style={{ color: "grey" }}>
-                  <Icon name="id card" />
-                  Person Information
-                </Menu.Item>
-         
+              <Menu.Item style={{ color: "grey" }}>
+                <Icon name="id card" />
+                Person Information
+              </Menu.Item>
             </Link>
             <hr/>
             <Button onClick={this.signOut} style={{backgroundColor: 'white'}}>
@@ -352,9 +299,9 @@ signOut = () => {
                     Candidate List
               </Header>
                   <Container>                      
-                      <table>
+                      
                       {this.renderTable()}
-                      </table>                                        
+                                                              
                   </Container>
                 </Grid.Column>
                 <Grid.Column style={{ float: 'right', width: '30%' }}>
@@ -363,17 +310,20 @@ signOut = () => {
                         Add Candidate
                        </Header>
                        <Card style={{width: '100%'}}>      
-                       
+                       <Form></Form>
                        <Form.Group size='large'style={{marginLeft: '15%',marginRight: '15%'}} >                       
                        <br/>
-                       <Form.Input
-                        fluid
-                        label='Name:'
-                        placeholder='Enter your name.'
-                        onChange={event => this.setState({ cand_name: event.target.value })}
-                        style={{ textAlign: 'center' }}
-                       
-                    />        
+                      <Form.Input
+                          fluid
+                          label="Name"
+                          placeholder="Enter candidate name"
+                          value={this.state.cand_name}
+                          onChange={(e) =>
+                            this.setState({
+                              cand_name: e.target.value,
+                            })
+                          }
+                        />      
                         
                         <p>Image:</p>
                        
@@ -381,7 +331,7 @@ signOut = () => {
                         <div className="ui fluid" style={{ borderWidth: '0px', marginRight: '20%' }}>
                           <input
                               type="file"
-                              id="embedpollfileinput"
+                              accept="image/*"
                               onChange={this.captureFile}
                             />
 
@@ -390,20 +340,22 @@ signOut = () => {
                             </label>
                         </div><br /><br /><br />
                         <p>Description:</p>
-                        <Form.Input as='TextArea'
-                         fluid
-                         label='Description:'                         
-                         placeholder='Describe here.'
-                         style={{width: '100%'}}
-                         centered={true}
-                         onChange={event => this.setState({ cand_desc: event.target.value })}
-                          />
+                        <Form.TextArea
+                          label="Description"
+                          placeholder="Describe candidate"
+                          onChange={(e) =>
+                            this.setState({
+                              cand_desc: e.target.value,
+                            })
+                          }
+                        />
                        <br/><br/>
                        <p>E-mail ID: </p>
-                       <Form.Input fluid
-                         id="email"
-                         placeholder="Enter your e-mail"
-                       />
+                       <Form.Input
+                          id="email"
+                          fluid
+                          placeholder="Candidate Email"
+                        />
                        <br/>
                        <Button primary onClick={this.onSubmit} loading={this.state.loading} style={{marginBottom: '10px',marginBottom: '10px'}}>Register</Button>
                         </Form.Group>                                  

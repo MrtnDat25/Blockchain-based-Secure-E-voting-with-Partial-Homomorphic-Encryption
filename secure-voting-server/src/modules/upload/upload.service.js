@@ -4,10 +4,11 @@ import FormData from "form-data";
 const uploadToPinata = async (file) => {
   const formData = new FormData();
 
-    formData.append(
+  formData.append(
     "file",
-    this.state.file
-    );
+    file.buffer,
+    file.originalname
+  );
 
   const response = await axios.post(
     "https://api.pinata.cloud/pinning/pinFileToIPFS",
