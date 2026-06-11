@@ -4,45 +4,68 @@ import Election from "../elections/election.model.js";
 import bcrypt from "bcryptjs";
 
 const createCandidate = async (data) => {
+
   const {
     electionId,
     email,
     name,
+    imageCid,
   } = data;
 
-  const election = await Election.findById(
-    electionId
-  );
+  const election =
+    await Election.findById(
+      electionId
+    );
 
   if (!election) {
-    throw new Error("Election not found");
-  }
-
-  if (
-    election.status !== "draft" &&
-    election.status !== "registration_open"
-  ) {
     throw new Error(
-      "Cannot add candidate. Election is no longer editable."
+      "Election not found"
     );
   }
 
-  let user = await User.findOne({
-    email,
-  });
+  const existedCandidate =
+    await Candidate.findOne({
+      electionId,
+      email,
+    });
+
+  if (existedCandidate) {
+    throw new Error(
+      "Candidate already exists"
+    );
+  }
+
+  let user =
+    await User.findOne({
+      email,
+    });
 
   if (!user) {
-    const passwordHash = await bcrypt.hash(
-      email,
-      10
-    );
 
-    user = await User.create({
-      email,
-      fullName: name,
-      role: "candidate",
-      passwordHash,
-    });
+    const passwordHash =
+      await bcrypt.hash(
+        email,
+        10
+      );
+
+    user =
+      await User.create({
+        email,
+        fullName: name,
+        role: "candidate",
+        passwordHash,
+        imageCid,
+      });
+
+  } else {
+
+    if (imageCid) {
+
+      user.imageCid =
+        imageCid;
+
+      await user.save();
+    }
   }
 
   const count =
@@ -50,16 +73,14 @@ const createCandidate = async (data) => {
       electionId,
     });
 
-  const candidate =
-    await Candidate.create({
-      electionId,
-      userId: user._id,
-      email,
-      name,
-      candidateIndexOnChain: count,
-    });
-
-  return candidate;
+  return Candidate.create({
+    electionId,
+    userId: user._id,
+    email,
+    name,
+    imageCid,
+    candidateIndexOnChain: count,
+  });
 };
 
 const getCandidates = async (electionId) => {

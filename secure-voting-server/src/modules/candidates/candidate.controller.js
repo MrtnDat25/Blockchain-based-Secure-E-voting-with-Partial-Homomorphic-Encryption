@@ -62,29 +62,27 @@ const createCandidate =
   };
 
 const getCandidates =
-  async (req, res) => {
-    try {
+async (electionId) => {
 
-      const candidates =
-        await service.getCandidates(
-          req.query.electionId
-        );
+  return Candidate
+    .find({
+      electionId,
+    })
+    .populate(
+      "userId",
+      "fullName email imageCid"
+    );
+};
 
-      return res.json({
-        status: "success",
-        data: candidates,
-      });
+const deleteCandidate =
+async (candidateId) => {
 
-    } catch (err) {
-
-      return res.status(500).json({
-        status: "error",
-        message: err.message,
-      });
-    }
-  };
-
+  return Candidate.findByIdAndDelete(
+    candidateId
+  );
+};
 export default {
   createCandidate,
   getCandidates,
+  deleteCandidate,
 };

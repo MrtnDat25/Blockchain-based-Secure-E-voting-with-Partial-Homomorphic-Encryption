@@ -42,7 +42,6 @@ const candidateSchema = new mongoose.Schema(
       trim: true,
     },
 
-    avatar: String,
 
     bio: String,
 
@@ -52,6 +51,11 @@ const candidateSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    imageCid: {
+      type: String,
+      default: "",
+    },
+
 
     cachedVoteCount: {
       type: Number,

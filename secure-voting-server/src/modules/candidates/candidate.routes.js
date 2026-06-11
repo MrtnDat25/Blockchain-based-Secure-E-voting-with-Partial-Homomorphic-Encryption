@@ -205,4 +205,10 @@ router.get(
   controller.getCandidates
 );
 
+router.delete(
+  "/:id",
+  auth,
+  controller.deleteCandidate
+);
+
 export default router;
