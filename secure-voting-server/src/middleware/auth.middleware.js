@@ -5,6 +5,7 @@ export default async (req, res, next) => {
 
   try {
     const authHeader = req.headers.authorization;
+    console.log("AUTH HEADER:", req.headers.authorization);
 
     if (!authHeader) {
       console.log("NO TOKEN");
@@ -23,7 +24,8 @@ export default async (req, res, next) => {
     console.log("TOKEN OK");
 
     req.user = decoded;
-
+    console.log("TOKEN:", token);
+    console.log("DECODED:", jwt.decode(token));
     next();
   } catch (err) {
     console.log("AUTH ERROR", err.message);
