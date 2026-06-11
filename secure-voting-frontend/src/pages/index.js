@@ -209,7 +209,7 @@ class HomepageLayout extends Component {
 
             <Grid.Column textAlign="center">
               <Image
-                src="/public/ether2.png"
+                src="../public/ether2.png"
                 centered
                 style={{
                   width: "220px",
@@ -305,7 +305,7 @@ class HomepageLayout extends Component {
 
           <link
             rel="shortcut icon"
-            href="logo3.png"
+            href="../public/logo3.png"
           />
         </Head>
 

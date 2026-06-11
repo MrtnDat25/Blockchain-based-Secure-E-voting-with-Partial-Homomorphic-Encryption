@@ -12,12 +12,15 @@ import Head from "next/head";
 import { uploadToPinata } from "../../../services/pinata";
 import api from "../../../services/api"
 
+import { withRouter } from "next/router";
+import SidebarMenu from '../../../../components/SidebarMenu';
 
 class VotingList extends Component { 
 
     state = {
       candidates: [],
       item: [],
+      election_address: "",
 
       cand_name: "",
       cand_desc: "",
@@ -35,7 +38,13 @@ async componentDidMount() {
     console.log("Missing electionId");
     return;
   }
+console.log(
+  "electionId:",
+  localStorage.getItem("electionId")
+);
 
+    const meRes = await api.get("auth/me");
+    this.setState({election_address: meRes.data.data._id})
     const res = await api.get(
       `/candidates?electionId=${electionId}`
     );
@@ -185,7 +194,9 @@ onSubmit = async (event) => {
   } catch (err) {
 
     console.log(err);
-
+      console.log("STATUS:", err.response?.status);
+  console.log("DATA:", err.response?.data);
+  console.log("ERROR:", err);
     alert(
       err.response?.data?.message ||
       "Add candidate failed"
@@ -198,72 +209,7 @@ onSubmit = async (event) => {
 };
     
     SidebarExampleVisible = () => (
-        <Sidebar.Pushable>
-          <Sidebar as={Menu} animation='overlay' icon='labeled' inverted vertical visible width='thin' style={{ backgroundColor: 'white', borderWidth: "10px" }}>
-          <Menu.Item  style={{ color: 'grey' }} >
-          <h2>MENU</h2><hr/>
-          </Menu.Item>      
-          <Link href={
-            {
-              pathname : "/election/[address]/company_dashboard",
-              query : { address: Cookies.get('address')}
-            }
-          }>
-          
-          
-            <Menu.Item style={{ color: 'grey' }}>
-              <Icon name='dashboard'/>
-              Dashboard
-            </Menu.Item>
-          
-            </Link>
-            <Link href={
-            {
-              pathname : "/election/[address]/candidate_list",
-              query : { address: Cookies.get('address')}
-            }
-          }>
-       
-            <Menu.Item  style={{ color: 'grey' }}>
-              <Icon name='user outline' />
-              Candidate List
-            </Menu.Item>
-        
-            </Link>
-            <Link href={
-            {
-              pathname : "/election/[address]/voting_list",
-              query : { address: Cookies.get('address')}
-            }
-          }>
-         
-            <Menu.Item  style={{ color: 'grey' }}>
-              <Icon name='list' />
-              Voter List
-            </Menu.Item>
-           
-            </Link>
-
-            <Link
-              href={{
-                pathname: "/election/[address]/person_infor",
-                query: { address: Cookies.get("address") },
-              }}
-            >
-              <Menu.Item style={{ color: "grey" }}>
-                <Icon name="id card" />
-                Person Information
-              </Menu.Item>
-            </Link>
-            <hr/>
-            <Button onClick={this.signOut} style={{backgroundColor: 'white'}}>
-            <Menu.Item  style={{ color: 'grey' }}>
-              <Icon name='sign out' />
-              Sign Out
-            </Menu.Item>       
-            </Button>  
-          </Sidebar>
-        </Sidebar.Pushable>
+        <SidebarMenu address={this.state.election_address} />
       )
 signOut = () => {
 	Cookies.remove('address');

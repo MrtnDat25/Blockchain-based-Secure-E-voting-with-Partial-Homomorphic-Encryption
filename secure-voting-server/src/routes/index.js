@@ -24,16 +24,8 @@ router.use("/votingTokens", tokenRoutes);
 router.use("/ballots", ballotRoutes);
 router.use("/results", resultRoutes);
 router.use("/audit", auditRoutes);
-
-
-router.use(
-  "dashboard",
-  dashboardRoutes
-);
-router.use(
-  "upload",
-  uploadRoutes
-);
+router.use("/dashboard",dashboardRoutes);
+router.use("/upload",uploadRoutes);
 export default router;
 
 // router.use(

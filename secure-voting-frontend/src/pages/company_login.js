@@ -76,7 +76,12 @@ signin = async (e) => {
     console.log("LOGIN RESPONSE:", response.data);
 
     const { accessToken, user } = response.data;
-
+    if (user.role !== "company") {
+      alert(
+        "Only company accounts can access Company Dashboard"
+      );
+      return;
+    }
     if (!accessToken) {
       alert("No token returned from server");
       return;
@@ -91,7 +96,15 @@ signin = async (e) => {
       path: "/",
     });
     console.log(localStorage.getItem("accessToken"));
-    Router.push("/dashboard/company");
+    console.log("LOGIN USER:", user);
+    console.log("USER ID:", user._id);
+    Router.push({
+        pathname:
+          "/dashboard/[address]/company",
+        query: {
+          address: user.id,
+        },
+});
 
   } catch (err) {
     console.log(err);

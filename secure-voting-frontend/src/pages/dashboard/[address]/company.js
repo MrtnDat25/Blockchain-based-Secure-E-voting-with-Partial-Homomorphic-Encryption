@@ -1,12 +1,13 @@
 import React, { Component } from "react";
 
-import api from "../../services/api";
+import api from "../../../services/api";
 import Cookies from "js-cookie";
 import Link from "next/link";
 import Router from "next/router";
 import Head from "next/head";
 
-import Layout from "../../../components/Layout";
+import Layout from "../../../../components/Layout";
+import SidebarMenu from "../../../../components/SidebarMenu";
 
 import {
   Chart as ChartJS,
@@ -131,69 +132,9 @@ class CompanyDashboard extends Component {
 
         <Grid>
           <Grid.Row>
-            <Grid.Column width={2}>
-              <Sidebar.Pushable>
-                <Sidebar
-                  as={Menu}
-                  visible
-                  vertical
-                  inverted={false}
-                  style={{ backgroundColor: "white" }}
-                >
-                  <Menu.Item header>MENU</Menu.Item>
-
-                  <Link
-                    href={{
-                      pathname:
-                        "/election/[address]/company_dashboard",
-                      query: {
-                        address: this.state.election_address,
-                      },
-                    }}
-                  >
-                    <Menu.Item>
-                      <Icon name="dashboard" />
-                      Dashboard
-                    </Menu.Item>
-                  </Link>
-
-                  <Link
-                    href={{
-                      pathname:
-                        "/election/[address]/candidate_list",
-                      query: {
-                        address: this.state.election_address,
-                      },
-                    }}
-                  >
-                    <Menu.Item>
-                      <Icon name="user outline" />
-                      Candidate List
-                    </Menu.Item>
-                  </Link>
-
-                  <Link
-                    href={{
-                      pathname:
-                        "/election/[address]/voting_list",
-                      query: {
-                        address: this.state.election_address,
-                      },
-                    }}
-                  >
-                    <Menu.Item>
-                      <Icon name="list" />
-                      Voter List
-                    </Menu.Item>
-                  </Link>
-
-                  <Button onClick={this.signOut}>
-                    <Icon name="sign out" />
-                    Sign Out
-                  </Button>
-                </Sidebar>
-              </Sidebar.Pushable>
-            </Grid.Column>
+          <Grid.Column width={2}>
+            <SidebarMenu address={this.state.election_address} />
+          </Grid.Column>
 
             <Layout>
               <Grid.Column width={14}>
