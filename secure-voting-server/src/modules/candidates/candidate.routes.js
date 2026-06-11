@@ -205,6 +205,8 @@ router.get(
   controller.getCandidates
 );
 
+
+
 router.delete(
   "/:id",
   auth,

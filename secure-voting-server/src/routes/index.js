@@ -13,6 +13,9 @@ import auditRoutes from "../modules/audit/audit.route.js"
 import dashboardRoutes
 from "../modules/dashboard/dashboard.route.js";
 
+import uploadRoutes
+from "../modules/upload/upload.route.js";
+
 router.use("/auth", AuthRoutes);
 router.use("/elections", electionRoutes);
 router.use("/candidates", candidateRoutes);
@@ -24,8 +27,12 @@ router.use("/audit", auditRoutes);
 
 
 router.use(
-  "/api/dashboard",
+  "dashboard",
   dashboardRoutes
+);
+router.use(
+  "upload",
+  uploadRoutes
 );
 export default router;
 

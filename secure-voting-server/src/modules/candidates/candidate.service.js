@@ -9,6 +9,7 @@ const createCandidate = async (data) => {
     electionId,
     email,
     name,
+    bio,
     imageCid,
   } = data;
 
@@ -78,15 +79,19 @@ const createCandidate = async (data) => {
     userId: user._id,
     email,
     name,
+    bio,
     imageCid,
     candidateIndexOnChain: count,
   });
 };
 
 const getCandidates = async (electionId) => {
-  return Candidate.find({
+    return Candidate.find({
     electionId,
-  });
+  }).populate(
+    "userId",
+    "fullName imageCid email"
+  );
 };
 
 export default {
